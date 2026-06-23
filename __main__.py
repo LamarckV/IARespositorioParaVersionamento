@@ -100,8 +100,14 @@ def no_roteador(estado: Estado) -> dict:
     return {"agentes": ["roteador", rota], "rota": rota}
 
 def no_guardrail_entrada(estado: Estado) -> dict:
-    pergunta_usuario = estado["messages"][-1].content
-    texto_anonimizado, mapa_pii = anonimizar_entrada(pergunta_usuario)
+    user_message = estado["messages"][-1]
+
+    if isinstance(user_message, dict) and "content" in user_message:
+        text_user = user_message["content"]
+    else:
+        text_user = str(user_message)
+
+    texto_anonimizado, mapa_pii = anonimizar_entrada(text_user)
     resposta_guardrail = guardrail_entrada(texto_anonimizado)
 
     if resposta_guardrail["bloqueado"]:
@@ -112,10 +118,9 @@ def no_guardrail_entrada(estado: Estado) -> dict:
         }
     else:
         return {
-            "rota": "roteador",
             "mapa_pii": mapa_pii,
             "agentes": estado["agentes"] + ["guardrail_entrada"],
-            "messages": [RemoveMessage(id=pergunta_usuario.id), {"role": "assistant", "content": texto_anonimizado}],
+            "messages": [RemoveMessage(id=user_message.id), {"role": "assistant", "content": texto_anonimizado}],
         }
 
 def no_guardrail_saida(estado: Estado) -> dict:
@@ -170,7 +175,6 @@ grafo.add_conditional_edges(
     }
 )
 
-grafo.set_entry_point("roteador")
 grafo.add_conditional_edges(
     "roteador",
     decidir_especialista,
@@ -431,7 +435,6 @@ def executar_fluxo_assessor(pergunta_usuario: str, session_id: str) -> str:
     }
 
     estado_final = fluxo_agentes.invoke(estado_inicial, config={"configurable": {"thread_id": session_id}})
-    print(f"[debug] agentes chamados: {estado_final.get('agentes_chamados')}")
     return estado_final.get("resposta_final")
 
 
