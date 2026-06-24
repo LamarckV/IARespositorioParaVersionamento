@@ -207,8 +207,9 @@ def executar_fluxo_assessor(pergunta_usuario: str, session_id: str) -> str:
     }
 
     estado_final = fluxo_agentes.invoke(estado_inicial, config={"configurable": {"thread_id": session_id}})
-    print(f"[debug] agentes chamados: {estado_final.get('agentes_chamados')}")
-    return estado_final.get("resposta_final")
+    print(f"[debug] agentes chamados: {estado_final.get('agentes')}")
+    # Resposta final está dentro do último message gerado pelo grafo
+    return estado_final["messages"][-1].content
 
 # =============================================================================
 # LOOP PRINCIPAL
@@ -335,7 +336,10 @@ def no_roteador(estado: Estado) -> dict:
             rota = linha.split("=", 1)[1].strip()
             break
 
-    return {"agentes": ["roteador", rota], "rota": rota}
+    return {
+        "agentes": estado["agentes"] + ["roteador", rota],
+        "rota": rota,
+    }
 
 
 def no_guardrail_entrada(estado: Estado) -> dict:
@@ -345,15 +349,17 @@ def no_guardrail_entrada(estado: Estado) -> dict:
 
     if resposta_guardrail["bloqueado"]:
         return {
-            "rota": "fim",
             "messages": [{"role": "assistant", "content": resposta_guardrail["mensagem"]}],
         }
     else:
         return {
             "mapa_pii": mapa_pii,
-            "messages": [RemoveMessage(id=pergunta_usuario.id), {"role": "assistant", "content": texto_anonimizado}],
+            "agentes": estado["agentes"] + ["guardrail_entrada"],
+            "messages": [
+                RemoveMessage(id=estado["messages"][-1].id),
+                {"role": "assistant", "content": texto_anonimizado}
+            ],
         }
-
 
 def no_guardrail_saida(estado: Estado) -> dict:
     resposta_orquestrador = estado["messages"][-1].content
@@ -378,11 +384,13 @@ def no_orquestrador(estado: Estado) -> dict:
 
 # Decisões
 def decidir_especialista(estado: Estado) -> str:
-    texto = estado.get("input", "").strip()
-    if not texto.startswith("ROUTE="):
-        return "fim"
-    rota = texto.split("\n", 1)[0].split("=", 1)[1].strip()
-    return rota if rota in ("financeiro", "agenda", "faq") else "fim"
+    rota = estado.get("rota", "fim")
+
+    return rota if rota in (
+        "financeiro",
+        "agenda",
+        "faq",
+    ) else "fim"
 
 
 def decidir_pos_guardrail_entrada(estado: Estado) -> str:
@@ -431,11 +439,18 @@ def executar_fluxo_assessor(pergunta_usuario: str, session_id: str) -> str:
         "agentes": [],
         "rota": "",
         "mapa_pii": {},
-        "input": "",
     }
+    
+    estado_final = fluxo_agentes.invoke(
+        estado_inicial,
+        config={"configurable": {"thread_id": session_id}},
+    )
 
-    estado_final = fluxo_agentes.invoke(estado_inicial, config={"configurable": {"thread_id": session_id}})
-    return estado_final.get("resposta_final")
+    print(f"[debug] agentes chamados: {estado_final.get('agentes')}")
+
+    print(estado_final)  # debug temporário
+
+    return estado_final["messages"][-1]
 
 
 if __name__ == '__main__':
