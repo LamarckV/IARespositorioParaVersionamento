@@ -7,18 +7,18 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_groq import ChatGroq
-from pg_tools import TOOLS
+from tools.__pgTools__ import TOOLS
 import os
 import re
-from __faqTools__ import search_faq
-from __prompts__ import (
+from tools.__faqTools__ import search_faq
+from tools.__prompts__ import (
     ROUTER_PROMPT_COMPLETO,
     FINANCEIRO_PROMPT_COMPLETO,
     AGENDA_PROMPT_COMPLETO,
     ORQUESTRADOR_PROMPT_COMPLETO,
     FAQ_PROMPT_COMPLETO,
 )
-from __guardRail__ import anonimizar_entrada, guardrail_entrada, guardrail_saida
+from tools.__guardRail__ import anonimizar_entrada, guardrail_entrada, guardrail_saida
 from langchain_core.messages import RemoveMessage
 load_dotenv()
 
@@ -238,18 +238,18 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_groq import ChatGroq
-from pg_tools import TOOLS
+from tools.__pgTools__ import TOOLS
 import os
 import re
-from __faqTools__ import search_faq
-from __prompts__ import (
+from tools.__faqTools__ import search_faq
+from tools.__prompts__ import (
     ROUTER_PROMPT_COMPLETO,
     FINANCEIRO_PROMPT_COMPLETO,
     AGENDA_PROMPT_COMPLETO,
     ORQUESTRADOR_PROMPT_COMPLETO,
     FAQ_PROMPT_COMPLETO,
 )
-from __guardRail__ import anonimizar_entrada, guardrail_entrada, guardrail_saida
+from tools.__guardRail__ import anonimizar_entrada, guardrail_entrada, guardrail_saida
 from langchain_core.messages import RemoveMessage
 
 load_dotenv()

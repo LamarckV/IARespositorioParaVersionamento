@@ -5,7 +5,7 @@ from typing import List, Optional
 from langchain.tools import tool
 from pydantic import BaseModel, Field
 import unicodedata
-from __faqTools__ import search_faq
+from tools.__faqTools__ import search_faq
 
 load_dotenv()
 
